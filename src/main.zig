@@ -3,7 +3,10 @@ const std = @import("std");
 pub fn main() void {
     var filler = CenterFiller(20).init('-');
     const writer = filler.writer();
-    writer.writeAll("Hello there!");
+    writer.writeAll("Yo!");
+    std.debug.print("{s}\n", .{filler.buf});
+    const gen_writer = filler.gen_writer();
+    gen_writer.writeAll("Hello there!");
     std.debug.print("{s}\n", .{filler.buf});
 }
 
@@ -24,6 +27,10 @@ pub fn CenterFiller(comptime size: usize) type {
 
         pub fn writer(self: *Self) Writer {
             return Writer.init(self);
+        }
+
+        pub fn gen_writer(self: *Self) GenericWriter(*Self, writeAll) {
+            return GenericWriter(*Self, writeAll){ .context = self };
         }
     };
 }
@@ -51,3 +58,17 @@ pub const Writer = struct {
         self.writeAllFn(self.ptr, data);
     }
 };
+
+pub fn GenericWriter(
+    comptime Context: type,
+    comptime writeAllFn: fn (context: Context, data: []const u8) void,
+) type {
+    return struct {
+        const Self = @This();
+        context: Context,
+
+        pub fn writeAll(self: Self, data: []const u8) void {
+            return writeAllFn(self.context, data);
+        }
+    };
+}

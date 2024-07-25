@@ -1,13 +1,13 @@
 const std = @import("std");
 
 pub fn main() void {
-    var filler = Filler(20).init('-');
+    var filler = CenterFiller(20).init('-');
     const writer = filler.writer();
     writer.writeAll("Hello there!");
     std.debug.print("{s}\n", .{filler.buf});
 }
 
-pub fn Filler(comptime size: usize) type {
+pub fn CenterFiller(comptime size: usize) type {
     return struct {
         const Self = @This();
         buf: [size]u8 = undefined,
@@ -17,7 +17,9 @@ pub fn Filler(comptime size: usize) type {
         }
 
         pub fn writeAll(self: *Self, data: []const u8) void {
-            std.mem.copyForwards(u8, &self.buf, data);
+            std.debug.assert(data.len <= self.buf.len);
+            const offset = (self.buf.len - data.len) / 2;
+            std.mem.copyForwards(u8, self.buf[offset..], data);
         }
 
         pub fn writer(self: *Self) Writer {
